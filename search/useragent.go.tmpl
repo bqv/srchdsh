@@ -19,7 +19,7 @@ var (
 		"sec-ch-ua-platform":        []string{`"Windows"`},
 		"Upgrade-Insecure-Requests": []string{`1`},
 		"Accept":                    []string{"text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7"},
-		"Sec-Fetch-Site":            []string{`none`},
+		"Sec-Fetch-Site":            []string{`same-origin`},
 		"Sec-Fetch-Mode":            []string{`navigate`},
 		"Sec-Fetch-User":            []string{`?1`},
 		"Sec-Fetch-Dest":            []string{`document`},
