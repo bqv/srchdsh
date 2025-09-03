@@ -8,13 +8,13 @@ import (
 
 // DefaultUserAgent is the user agent that is used when the UserAgent field in
 // [Config] is left empty.
-const DefaultUserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36"
+const DefaultUserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
 
 var (
 	// Made to look like Chrome.
 	// This may not be super convincing.
 	defaultBaseHeaders = http.Header{
-		"sec-ch-ua":                 []string{`"Chromium";v="137", "Not)A;Brand";v="24", "Google Chrome";v="137"`},
+		"sec-ch-ua":                 []string{`"Chromium";v="140", "Not)A;Brand";v="24", "Google Chrome";v="140"`},
 		"sec-ch-ua-mobile":          []string{`?0`},
 		"sec-ch-ua-platform":        []string{`"Windows"`},
 		"Upgrade-Insecure-Requests": []string{`1`},
