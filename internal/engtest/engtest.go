@@ -95,7 +95,11 @@ func New(driver string, cfg search.Config, ecfg ...Config) *Tester {
 //
 // If -update was passed to go test, then the search queries will actually be
 // performed and their results will be saved to disk.
-func (tt *Tester) RunTest(t *testing.T, query string) {
+//
+// The return value indicates if the tests were updated or not.
+// Tests are updated when -update is passed to go test, or when test files do
+// not exist for this test.
+func (tt *Tester) RunTest(t *testing.T, query string) (updated bool) {
 	// Test to see if this exists.
 	fp := filepath.Join("testdata", tt.driver, fnencode(query))
 	notExist := false
@@ -111,9 +115,11 @@ func (tt *Tester) RunTest(t *testing.T, query string) {
 			t.Logf("automatically entering update mode for %q", query)
 		}
 		testFn = tt.updateTestFn(query)
+		updated = true
 	}
 
 	t.Run(fmt.Sprintf("%s:%q", tt.driver, query), testFn)
+	return
 }
 
 // RunTests is a wrapper function around [RunTest] to run several tests at
@@ -124,9 +130,9 @@ func (tt *Tester) RunTest(t *testing.T, query string) {
 // accessing the search engine.
 func (tt *Tester) RunTests(t *testing.T, queries ...string) {
 	for i, q := range queries {
-		tt.RunTest(t, q)
+		updated := tt.RunTest(t, q)
 
-		if *update && i != len(queries)-1 {
+		if updated && i != len(queries)-1 {
 			time.Sleep(time.Second * time.Duration(*updateWaitTimeSecs))
 		}
 	}
