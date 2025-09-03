@@ -137,6 +137,12 @@ func (d *ddg) Search(ctx context.Context, query string, page int) ([]search.Resu
 		form.Set("vqd", vqd)
 	}
 
+	// Use a garbage kl (region) and df (language) value to look a bit more
+	// legitimate.
+	// These are set to blank in normal usage.
+	form.Set("kl", "")
+	form.Set("df", "")
+
 	if page >= 1 {
 		// These are not present in the initial request.
 		form.Set("api", "d.js")
@@ -162,8 +168,11 @@ func (d *ddg) Search(ctx context.Context, query string, page int) ([]search.Resu
 
 	// ddg requires us to set the referer header as of some time in May
 	// 2025.
+	// And sometime since then, but before Sep 2025, the Referrer-Policy is
+	// set to "origin" so we can only include the origin here.
 	// Without it, we get 202s.
-	req.Header.Set("Referer", "https://lite.duckduckgo.com/lite/")
+	req.Header.Set("Origin", "https://lite.duckduckgo.com")
+	req.Header.Set("Referer", "https://lite.duckduckgo.com/")
 
 	res, err := d.http.Do(req)
 	if err != nil {
@@ -191,14 +200,14 @@ func (d *ddg) Search(ctx context.Context, query string, page int) ([]search.Resu
 	vqd, _ := doc.Find(`input[name="vqd"]`).Attr("value")
 	d.setVqd(query, vqd)
 
-	elem := doc.Find(`div.filters > table[border="0"]`).Eq(2).Children().Children()
+	elem := doc.Find(`table[border="0"]`).Eq(2).Children().Children()
 	// first children selects the tbody, second children selects the children of the tbody
 
 	// DDG lays out results like this using tr:
-	// 1. number, title, encoded link
+	// 1. number, title, link
 	// 2. description
-	// 3. timestamp
-	// 4. nothing
+	// 3. timestamp/link text (we don't care about it)
+	// 4. nothing (we don't care about it)
 	// So, the max number of results is floor(number of children / 4).
 	// Ads are stripped out, of course, and it's unknown how many of those
 	// there are.
@@ -211,7 +220,7 @@ func (d *ddg) Search(ctx context.Context, query string, page int) ([]search.Resu
 		header := elem.Eq(i * 4)
 		link := header.Find("a.result-link")
 
-		desc := elem.Eq((i * 4) + 1).First().Find("tr .result-snippet")
+		desc := elem.Eq((i * 4) + 1).First().Find("td.result-snippet")
 
 		// Check for ads.
 		v.Link, _ = link.Attr("href")
