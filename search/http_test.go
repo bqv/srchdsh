@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/andybalholm/brotli"
+	"github.com/klauspost/compress/zstd"
 )
 
 func initCompressionServer() *httptest.Server {
@@ -37,6 +38,16 @@ func initCompressionServer() *httptest.Server {
 		rw.Header().Set("Content-Encoding", "deflate")
 		w := zlib.NewWriter(rw)
 		w.Write([]byte("hello world deflate"))
+		w.Close()
+	})
+
+	mux.HandleFunc("/zstd", func(rw http.ResponseWriter, r *http.Request) {
+		rw.Header().Set("Content-Encoding", "zstd")
+		w, err := zstd.NewWriter(rw)
+		if err != nil {
+			panic(err)
+		}
+		w.Write([]byte("hello world zstd"))
 		w.Close()
 	})
 
@@ -90,6 +101,10 @@ func TestResponseDecompressionBrotli(t *testing.T) {
 
 func TestResponseDecompressionDeflate(t *testing.T) {
 	testResponseDecompression(t, "deflate")
+}
+
+func TestResponseDecompressionZstd(t *testing.T) {
+	testResponseDecompression(t, "zstd")
 }
 
 func TestHttpClientCookies(t *testing.T) {

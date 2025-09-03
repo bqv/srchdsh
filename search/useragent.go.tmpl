@@ -23,7 +23,7 @@ var (
 		"Sec-Fetch-Mode":            []string{`navigate`},
 		"Sec-Fetch-User":            []string{`?1`},
 		"Sec-Fetch-Dest":            []string{`document`},
-		"Accept-Encoding":           []string{`gzip, deflate, br`},
+		"Accept-Encoding":           []string{`gzip, deflate, br, zstd`},
 		"Accept-Language":           []string{`en-US,en;q=0.9`},
 	}
 )

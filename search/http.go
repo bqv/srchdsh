@@ -18,6 +18,7 @@ import (
 	"github.com/PuerkitoBio/goquery"
 	"github.com/quic-go/quic-go"
 	"github.com/quic-go/quic-go/http3"
+	"github.com/klauspost/compress/zstd"
 
 	"git.sr.ht/~cmcevoy/srchd/internal/brotlihack"
 )
@@ -181,6 +182,11 @@ func handleResponseDecompression(res *http.Response) {
 		f()
 		res.Body = newLazyReader(res.Body, func(src io.Reader) (io.Reader, error) {
 			return zlib.NewReader(src)
+		})
+	case "zstd":
+		f()
+		res.Body = newLazyReader(res.Body, func(src io.Reader) (io.Reader, error) {
+			return zstd.NewReader(src)
 		})
 	}
 }
