@@ -82,36 +82,6 @@ func determinePageParams(page int) (s int, dc int) {
 	return
 }
 
-// Decodes the DDG href.
-func decodeDDGHref(href string) string {
-	i := strings.IndexRune(href, '?')
-	if i == -1 {
-		return ""
-	}
-
-	href = href[i+1:]
-	if href == "" {
-		return ""
-	}
-
-	if href[:4] == "uddg=" {
-		s := strings.IndexRune(href, '=')
-		e := strings.IndexRune(href, '&')
-		if e == -1 {
-			e = len(href)
-		}
-		href = href[s:e]
-		href, _ = url.QueryUnescape(href)
-		return href
-	}
-
-	v, err := url.ParseQuery(href)
-	if err != nil {
-		return ""
-	}
-	return v.Get("uddg")
-}
-
 // Escapes bangs when they appear in the query.
 func encodeDDGQuery(query string) string {
 	if !strings.ContainsRune(query, '!') {
@@ -141,7 +111,6 @@ func (d *ddg) Search(ctx context.Context, query string, page int) ([]search.Resu
 	// legitimate.
 	// These are set to blank in normal usage.
 	form.Set("kl", "")
-	form.Set("df", "")
 
 	if page >= 1 {
 		// These are not present in the initial request.
@@ -161,7 +130,7 @@ func (d *ddg) Search(ctx context.Context, query string, page int) ([]search.Resu
 
 	// We need to manually build the request.
 	// TODO: This is ugly.
-	req, err := d.http.New(ctx, http.MethodPost, "https://lite.duckduckgo.com/lite/", []byte(form.Encode()), "application/x-www-form-urlencoded")
+	req, err := d.http.New(ctx, http.MethodPost, "https://html.duckduckgo.com/html/", []byte(form.Encode()), "application/x-www-form-urlencoded")
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
@@ -171,8 +140,8 @@ func (d *ddg) Search(ctx context.Context, query string, page int) ([]search.Resu
 	// And sometime since then, but before Sep 2025, the Referrer-Policy is
 	// set to "origin" so we can only include the origin here.
 	// Without it, we get 202s.
-	req.Header.Set("Origin", "https://lite.duckduckgo.com")
-	req.Header.Set("Referer", "https://lite.duckduckgo.com/")
+	req.Header.Set("Origin", "https://html.duckduckgo.com")
+	req.Header.Set("Referer", "https://html.duckduckgo.com/")
 
 	res, err := d.http.Do(req)
 	if err != nil {
@@ -186,7 +155,7 @@ func (d *ddg) Search(ctx context.Context, query string, page int) ([]search.Resu
 	} else if res.StatusCode != 200 {
 		return nil, search.HttpError{
 			Status: res.StatusCode,
-			URL:    "https://lite.duckduckgo.com/lite/",
+			URL:    "https://html.duckduckgo.com/html/",
 			Method: "POST",
 		}
 	}
@@ -200,34 +169,19 @@ func (d *ddg) Search(ctx context.Context, query string, page int) ([]search.Resu
 	vqd, _ := doc.Find(`input[name="vqd"]`).Attr("value")
 	d.setVqd(query, vqd)
 
-	elem := doc.Find(`table[border="0"]`).Eq(2).Children().Children()
-	// first children selects the tbody, second children selects the children of the tbody
-
-	// DDG lays out results like this using tr:
-	// 1. number, title, link
-	// 2. description
-	// 3. timestamp/link text (we don't care about it)
-	// 4. nothing (we don't care about it)
-	// So, the max number of results is floor(number of children / 4).
-	// Ads are stripped out, of course, and it's unknown how many of those
-	// there are.
+	elem := doc.Find(`#links > .result.results_links`).Children()
 
 	results := make([]search.Result, 0, int(elem.Length()/4))
 
-	for i := 0; i < int(elem.Length()/4); i++ {
+	for i := 0; i < elem.Length(); i++ {
 		v := search.Result{}
 
-		header := elem.Eq(i * 4)
-		link := header.Find("a.result-link")
+		e := elem.Eq(i)
 
-		desc := elem.Eq((i * 4) + 1).First().Find("td.result-snippet")
+		link := e.Find("a.result__a")
+		desc := elem.Find("a.result__snippet")
 
-		// Check for ads.
 		v.Link, _ = link.Attr("href")
-
-		// NOTE: For some reason, when I made my requests match Chrome
-		// more, I stopped needing to decode hrefs.
-		// v.Link = decodeDDGHref(v.Link)
 
 		if strings.HasPrefix(v.Link, "https://duckduckgo.com/y.js") || v.Link == "" {
 			continue
@@ -247,6 +201,6 @@ func (d *ddg) Search(ctx context.Context, query string, page int) ([]search.Resu
 // Ping checks to see if the engine is reachable.
 func (d *ddg) Ping(ctx context.Context) error {
 	// Just access the index to see if we're okay.
-	_, err := d.http.Get(ctx, "https://lite.duckduckgo.com/lite")
+	_, err := d.http.Get(ctx, "https://html.duckduckgo.com/html")
 	return err
 }
