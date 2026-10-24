@@ -41,6 +41,7 @@ srchd is a young project and as such doesn't have a lot of support.
 - Google
 - [Marginalia Search](https://marginalia-search.com) (**not** through API)
 - Mediawiki (e.g. Wikipedia, requires configuration)
+- Startpage (Google's index, behind a proof-of-work challenge)
 - Yahoo
 - Yandex (experimental, off by default)
 - wiby.me (native API)
