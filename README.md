@@ -41,6 +41,7 @@ srchd is a young project and as such doesn't have a lot of support.
 - Google
 - [Marginalia Search](https://marginalia-search.com) (**not** through API)
 - Mediawiki (e.g. Wikipedia, requires configuration)
+- Mojeek (its own index; solves the Altcha challenge, first page only)
 - Startpage (Google's index, behind a proof-of-work challenge)
 - Yahoo
 - Yandex (experimental, off by default)

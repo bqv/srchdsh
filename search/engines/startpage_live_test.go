@@ -52,7 +52,7 @@ func TestStartpageLive(t *testing.T) {
 	}
 
 	// First run pays for the challenge and the sc token.
-	first := search0(newStartpageForTest(t), 0)
+	first := search0(newLiveEngine(t, "startpage"), 0)
 
 	// The cache must hold both, or the next fresh process pays again.
 	raw, err := os.ReadFile(filepath.Join(cacheDir, "srchdsh", "startpage.json"))
@@ -67,11 +67,11 @@ func TestStartpageLive(t *testing.T) {
 
 	// A new engine is a new process as far as the cache is concerned: it has
 	// an empty cookie jar and must restore the cookie from disk.
-	search0(newStartpageForTest(t), 0)
+	search0(newLiveEngine(t, "startpage"), 0)
 
 	// Paging is easy to get wrong by one, so make sure the parameter is
 	// accepted and moves the result set.
-	next := search0(newStartpageForTest(t), 1)
+	next := search0(newLiveEngine(t, "startpage"), 1)
 	if sameLinks(first, next) {
 		t.Errorf("page 2 returned the same links as page 1; the page parameter is probably wrong")
 	}
@@ -96,12 +96,12 @@ func sameLinks(a, b []search.Result) bool {
 	return true
 }
 
-func newStartpageForTest(t *testing.T) search.Engine {
+func newLiveEngine(t *testing.T, engineType string) search.Engine {
 	t.Helper()
 
-	eng, err := (search.Config{Type: "startpage"}).New()
+	eng, err := (search.Config{Type: engineType}).New()
 	if err != nil {
-		t.Fatalf("initialize: %v", err)
+		t.Fatalf("initialize %s: %v", engineType, err)
 	}
 	return eng
 }

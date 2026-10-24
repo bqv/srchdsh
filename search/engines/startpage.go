@@ -380,7 +380,7 @@ func (s *startpage) passAnubis(ctx context.Context, body []byte) error {
 	defer res.Body.Close()
 	_, _ = io.Copy(io.Discard, res.Body)
 
-	cookie, ttl := responseCookie(res, "spchal-auth")
+	cookie, ttl := responseCookie(res, "spchal-auth", spchalTTL)
 	if cookie == "" {
 		return fmt.Errorf("%w: no spchal-auth cookie in challenge response", search.ErrCaptcha)
 	}
@@ -390,8 +390,8 @@ func (s *startpage) passAnubis(ctx context.Context, body []byte) error {
 }
 
 // responseCookie finds a cookie in a response and returns its value along with
-// how long it will last.
-func responseCookie(res *http.Response, name string) (string, time.Duration) {
+// how long it will last. fallback is used when the server states no lifetime.
+func responseCookie(res *http.Response, name string, fallback time.Duration) (string, time.Duration) {
 	for _, c := range res.Cookies() {
 		if c.Name != name {
 			continue
@@ -404,7 +404,7 @@ func responseCookie(res *http.Response, name string) (string, time.Duration) {
 				return c.Value, ttl
 			}
 		}
-		return c.Value, spchalTTL
+		return c.Value, fallback
 	}
 	return "", 0
 }
@@ -482,7 +482,7 @@ func parseStartpage(body []byte, name string) ([]search.Result, error) {
 				// Startpage wraps the ellipsis after it in markup, so
 				// the prefix does not match the raw HTML.
 				Description: startpageAgoPrefix.ReplaceAllString(htmlText(r.Description), ""),
-				Link:        cleanStartpageURL(r.ClickURL),
+				Link:        cleanResultURL(r.ClickURL),
 				Sources:     []string{name},
 			})
 		}
@@ -491,12 +491,12 @@ func parseStartpage(body []byte, name string) ([]search.Result, error) {
 	return results, nil
 }
 
-// cleanStartpageURL removes tracking parameters from a result link.
+// cleanResultURL removes tracking parameters from a result link.
 //
 // [search.CleanURL] strips one instance of each parameter pattern per call, so
-// repeat until the URL settles: Startpage links often carry several utm_
+// repeat until the URL settles: result links often carry several utm_
 // parameters.
-func cleanStartpageURL(link string) string {
+func cleanResultURL(link string) string {
 	for i := 0; i < 8; i++ {
 		cleaned := search.CleanURL(link)
 		if cleaned == link {
