@@ -109,6 +109,16 @@ func runSearch(args []string, stdout, stderr io.Writer) int {
 		timeout time.Duration
 	)
 
+	fs.Usage = func() {
+		fmt.Fprint(stderr, "usage: srchdsh search -q QUERY [-max N] [-page N] [-json|-table] [-conf FILE]\n\n")
+		fmt.Fprint(stderr, "Searches every enabled engine and merges the results.\n"+
+			"Diagnostics go to stderr; stdout carries only the document or table.\n\n"+
+			"query operators:\n"+
+			"  :engine  restrict to the named engines, e.g. ':ddg deepseek harness'\n"+
+			"  \\:       search for a literal colon\n\n")
+		fs.PrintDefaults()
+	}
+
 	fs.StringVar(&query, "q", "", "query to search for")
 	fs.StringVar(&query, "query", "", "query to search for")
 	fs.IntVar(&max, "max", 10, "maximum number of sources; 0 means no limit")

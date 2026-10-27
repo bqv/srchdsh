@@ -16,9 +16,9 @@ import (
 	"time"
 
 	"github.com/PuerkitoBio/goquery"
+	"github.com/klauspost/compress/zstd"
 	"github.com/quic-go/quic-go"
 	"github.com/quic-go/quic-go/http3"
-	"github.com/klauspost/compress/zstd"
 
 	"srchdsh/internal/brotlihack"
 )
