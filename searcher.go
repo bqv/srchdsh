@@ -76,26 +76,39 @@ func normalizeLink(link string) string {
 	return purl.String()
 }
 
+// defaultEngineWeights is the trust each engine gets when the configuration
+// does not set a weight.
+//
+// The score of a result is the sum of its sources' weights, and every engine
+// returns its own top results regardless of relevance, so equal weights let a
+// novelty index outrank Google's on every tie: Wiby answers "best mechanical
+// keyboard 2026" with a car-audio repair guide and a Wang calculator, and at
+// weight 1.0 those sorted above Startpage's rtings and pcmag hits. These
+// values say how much an engine's ordering is trusted, not how much it is
+// liked; a configured weight always wins.
+var defaultEngineWeights = map[string]float64{
+	"wiby":       0.3,
+	"marginalia": 0.6,
+	"yahoo":      0.8,
+}
+
+// engineWeight returns the ranking weight for one engine.
+func engineWeight(name string) float64 {
+	if engineConfig, ok := cfg.Engines[name]; ok && engineConfig.Weight != 0 {
+		return engineConfig.Weight
+	}
+	if weight, ok := defaultEngineWeights[name]; ok {
+		return weight
+	}
+	return 1
+}
+
 // Calculates the multiplier of the result score.
 func calculateWeight(res search.Result) float64 {
 	sum := 0.0
-
 	for _, name := range res.Sources {
-		val := 1.0
-
-		// Override the above value if there was one set.
-		engineConfig, ok := cfg.Engines[name]
-		if ok {
-			// Ensure the weight is 1.
-			val = engineConfig.Weight
-			if val == 0 {
-				val = 1
-			}
-		}
-
-		sum += val
+		sum += engineWeight(name)
 	}
-
 	return sum
 }
 
