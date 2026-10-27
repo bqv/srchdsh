@@ -1,0 +1,17 @@
+{
+  "name": "dsh-search-srchdsh",
+  "version": "0.1.0",
+  "description": "DSH web-search provider backed by srchdsh.",
+  "type": "module",
+  "main": "./index.js",
+  "exports": {
+    ".": "./index.js"
+  },
+  "dependencies": {
+    "srchdsh": "file:../js"
+  },
+  "scripts": {
+    "test": "node --test test/"
+  },
+  "license": "AGPL-3.0"
+}

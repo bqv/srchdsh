@@ -56,6 +56,10 @@ error when every engine failed, so per-engine reasons are not lost. Installing
 it is `npm install ./js` or importing `./js/index.js` directly. Overhead over
 the CLI is about 11 ms per search.
 
+`plugin/` is the DSH provider built on that binding: it registers `srchdsh` on
+the `ctx.web` seam. See [plugin/README.md](plugin/README.md) for the profile
+entry and the pin that replaces DeepSeek's server-side search.
+
 ### The document
 
 ```json
