@@ -1,5 +1,7 @@
 # srchdsh
 
+English | [中文](README.zh.md)
+
 A metasearch backend for [DSH](https://github.com/deepseek-ai/deepseek-harness),
 forked from [srchd](https://git.sr.ht/~cmcevoy/srchd) by cmcevoy.
 
