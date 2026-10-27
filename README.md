@@ -121,6 +121,27 @@ fields are documented in [`docs/config.md`](docs/config.md).
 
 `srchdsh engines` prints the enabled set.
 
+### Deliberately absent
+
+Each of these was measured against this tree, not assumed; the numbers are from
+2026-10-24.
+
+- **Qwant** — `api.qwant.com` answers `403 {"error_code":50}` even with the
+  cookies its own single-page app sets, and `lite.qwant.com` now redirects to
+  that app. The gate is DataDome, a paid anti-bot with device fingerprinting,
+  not a puzzle a loop can solve.
+- **Ecosia** — `403`, "Ecosia Firewall", for a plain HTTP client. Its web
+  results are Bing's anyway, so the index would barely change.
+- **MetaGer** — no longer a free metasearch: the site is now a prepaid "key"
+  product, and its frontend is built on Startpage's template. It would add a
+  paywall in front of an index Startpage already covers.
+- **Google CSE** — the keyless CSE trick SearXNG uses needs a shared
+  third-party CSE id and its communal quota; Startpage serves the same index
+  without either.
+
+Qwant or Ecosia become worth revisiting only if they expose a sanctioned API,
+and MetaGer only if the key is bought.
+
 ## Licence and provenance
 
 AGPL-3.0. This is a derivative work of srchd; see [`LICENSE`](LICENSE) and
