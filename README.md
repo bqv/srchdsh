@@ -38,6 +38,24 @@ srchdsh engines          # enabled engines, from the current configuration
 srchdsh version
 ```
 
+### From Node
+
+`js/` is a dependency-free ESM package that runs the binary and returns the
+document:
+
+```js
+import { available, search } from 'srchdsh';
+
+if (!available()) throw new Error('srchdsh is not on PATH');
+
+const doc = await search('deepseek harness', { max: 5, signal });
+```
+
+It forwards an `AbortSignal` to the child, and attaches the document to the
+error when every engine failed, so per-engine reasons are not lost. Installing
+it is `npm install ./js` or importing `./js/index.js` directly. Overhead over
+the CLI is about 11 ms per search.
+
 ### The document
 
 ```json
