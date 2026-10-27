@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/url"
+	"strings"
 
 	"srchdsh/search"
 )
@@ -17,10 +18,22 @@ import (
 // structured output it serves. It returns ten items and does not page either
 // (first/count either repeat the first page or return an empty channel), so
 // only the first page exists for us.
+//
+// The feed also ignores the query unless a market is given: without mkt, Bing
+// answers with unrelated cached results (Google Translate help for a keyboard
+// query, LinkedIn profiles for a Go question) and no error. mkt=en-GB does the
+// same; only en-US was verified to return real results for English and Chinese
+// queries alike. The market can be overridden per engine with `mkt:` in the
+// configuration.
 type bing struct {
 	name string
 	http *search.HttpClient
+	mkt  string
 }
+
+// defaultBingMarket is the only market measured to return results that match
+// the query.
+const defaultBingMarket = "en-US"
 
 var (
 	_ search.Engine = &bing{}
@@ -28,9 +41,15 @@ var (
 
 func init() {
 	search.Add("bing", true, func(config search.Config) (search.Engine, error) {
+		mkt, _ := config.Extra["mkt"].(string)
+		if mkt == "" {
+			mkt = defaultBingMarket
+		}
+
 		return &bing{
 			name: config.Name,
 			http: config.NewHttpClient(),
+			mkt:  mkt,
 		}, nil
 	})
 }
@@ -54,9 +73,7 @@ func (b *bing) Search(ctx context.Context, query string, page int) ([]search.Res
 		return nil, nil
 	}
 
-	form := url.Values{}
-	form.Set("q", query)
-	form.Set("format", "rss")
+	form := bingParams(query, b.mkt)
 
 	ctx, cancel := b.http.Context(ctx)
 	defer cancel()
@@ -73,6 +90,17 @@ func (b *bing) Search(ctx context.Context, query string, page int) ([]search.Res
 	}
 
 	return parseBingFeed(body, b.name)
+}
+
+// bingParams builds the feed request. The market is load-bearing: without it
+// the feed serves unrelated results rather than an error.
+func bingParams(query, mkt string) url.Values {
+	form := url.Values{}
+	form.Set("q", query)
+	form.Set("format", "rss")
+	form.Set("mkt", mkt)
+	form.Set("setlang", strings.SplitN(mkt, "-", 2)[0])
+	return form
 }
 
 // parseBingFeed extracts results from an RSS document.

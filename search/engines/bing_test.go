@@ -58,3 +58,24 @@ func TestParseBingFeedInvalid(t *testing.T) {
 		t.Fatal("expected an error for a non-XML body")
 	}
 }
+
+func TestBingParams(t *testing.T) {
+	form := bingParams("deepseek harness", "en-US")
+
+	if got := form.Get("q"); got != "deepseek harness" {
+		t.Errorf("q = %q", got)
+	}
+	if got := form.Get("format"); got != "rss" {
+		t.Errorf("format = %q", got)
+	}
+	if got := form.Get("mkt"); got != "en-US" {
+		t.Errorf("mkt = %q", got)
+	}
+	if got := form.Get("setlang"); got != "en" {
+		t.Errorf("setlang = %q", got)
+	}
+
+	if got := bingParams("x", "pt-BR").Get("setlang"); got != "pt" {
+		t.Errorf("setlang for pt-BR = %q", got)
+	}
+}
