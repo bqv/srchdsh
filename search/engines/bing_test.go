@@ -1,61 +1,60 @@
-//go:build live
-
 package engines
 
 import (
-	"context"
-	"os"
 	"testing"
-
-	"srchdsh/search"
 )
 
-func TestBingSearch(t *testing.T) {
-	if os.Getenv("SRCHD_TEST_BROKEN") == "" {
-		t.Skip("Set SRCHD_TEST_BROKEN=1 to test Bing search.")
-		return
-	}
+func TestParseBingFeed(t *testing.T) {
+	body := []byte(`<?xml version="1.0" encoding="utf-8" ?><rss version="2.0"><channel>` +
+		`<title>Bing: deepseek harness</title>` +
+		`<item><title>DeepSeek &amp; Co</title>` +
+		`<link>https://www.deepseek.com/?utm_source=bing&amp;utm_medium=feed</link>` +
+		`<description>A &lt;b&gt;harness&lt;/b&gt; for coding agents.</description>` +
+		`<pubDate>Mon, 26 Oct 2026 19:12:00 GMT</pubDate></item>` +
+		`<item><title>Broken item</title><link></link><description>no url</description></item>` +
+		`</channel></rss>`)
 
-	d := (search.Config{Type: "bing"}).MustNew()
-
-	res, err := d.Search(context.Background(), "hello world", 0)
+	results, err := parseBingFeed(body, "bing")
 	if err != nil {
-		panic(err)
-	} else if len(res) == 0 {
-		t.Fatalf("search returned no results")
+		t.Fatalf("parse: %v", err)
 	}
 
-	for _, r := range res {
-		t.Logf("title: %s", r.Title)
-		t.Logf("link: %s", r.Link)
-		t.Logf("desc: %s", r.Description)
+	if len(results) != 1 {
+		t.Fatalf("got %d results, wanted 1: %+v", len(results), results)
 	}
 
-	// Ensure page 1 has results
-	res, err = d.Search(context.Background(), "hello world", 1)
+	first := results[0]
+	if first.Title != "DeepSeek & Co" {
+		t.Errorf("title = %q", first.Title)
+	}
+	if first.Link != "https://www.deepseek.com/" {
+		t.Errorf("link = %q, wanted tracking parameters removed", first.Link)
+	}
+	if first.Description != "A harness for coding agents." {
+		t.Errorf("description = %q", first.Description)
+	}
+	if len(first.Sources) != 1 || first.Sources[0] != "bing" {
+		t.Errorf("sources = %v", first.Sources)
+	}
+}
+
+func TestParseBingFeedEmpty(t *testing.T) {
+	// Bing answers a blocked request with a valid but empty channel, which is
+	// indistinguishable from a genuine no-results search.
+	body := []byte(`<?xml version="1.0"?><rss version="2.0"><channel>` +
+		`<title>Bing: nonsense</title></channel></rss>`)
+
+	results, err := parseBingFeed(body, "bing")
 	if err != nil {
-		panic(err)
-	} else if len(res) == 0 {
-		t.Fatalf("search returned no results")
+		t.Fatalf("parse: %v", err)
 	}
-
-	for _, r := range res {
-		t.Logf("title: %s", r.Title)
-		t.Logf("link: %s", r.Link)
-		t.Logf("desc: %s", r.Description)
+	if len(results) != 0 {
+		t.Fatalf("got %d results, wanted none", len(results))
 	}
+}
 
-	// Ensure page 2 has results
-	res, err = d.Search(context.Background(), "hello world", 2)
-	if err != nil {
-		panic(err)
-	} else if len(res) == 0 {
-		t.Fatalf("search returned no results")
-	}
-
-	for _, r := range res {
-		t.Logf("title: %s", r.Title)
-		t.Logf("link: %s", r.Link)
-		t.Logf("desc: %s", r.Description)
+func TestParseBingFeedInvalid(t *testing.T) {
+	if _, err := parseBingFeed([]byte("not xml at all"), "bing"); err == nil {
+		t.Fatal("expected an error for a non-XML body")
 	}
 }

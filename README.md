@@ -91,9 +91,9 @@ fields are documented in [`docs/config.md`](docs/config.md).
 | DuckDuckGo | works |
 | Startpage | Google's index; solves its Anubis proof of work, then caches the cookie for five minutes |
 | Mojeek | its own index; solves the Altcha challenge, first page only, and `robots.txt` disallows `/search` |
-| Bing | works, but Bing is rarely the best index |
-| Brave | upstream parser returns nothing; SearXNG's works, not ported |
-| Google | dead: consent wall, then JavaScript challenges |
+| Bing | works through its RSS feed, which is the only structured output left; first page only |
+| Brave | off by default: upstream parser returns nothing |
+| Google | off by default: consent wall, then JavaScript challenges |
 | Marginalia, Wiby, Yahoo, Yandex | upstream engines, unchanged |
 | Mediawiki | requires configuration |
 

@@ -18,7 +18,7 @@ var (
 )
 
 func init() {
-	search.Add("brave", true, func(config search.Config) (search.Engine, error) {
+	search.Add("brave", false, func(config search.Config) (search.Engine, error) {
 		// Brave returns a lot of content in its headers, so we need to
 		// increase the size that FastHTTP is willing to read
 		cli := config.NewHttpClient()

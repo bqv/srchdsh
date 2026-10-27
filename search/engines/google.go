@@ -22,7 +22,7 @@ var (
 )
 
 func init() {
-	search.Add("google", true, func(config search.Config) (search.Engine, error) {
+	search.Add("google", false, func(config search.Config) (search.Engine, error) {
 		// Use the Links user agent which is excempt from the
 		// JavaScript requirement.
 		// Other text-mode web browsers work too.
