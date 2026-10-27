@@ -9,7 +9,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"git.sr.ht/~cmcevoy/srchd/internal/brotlihack"
+	"srchdsh/internal/brotlihack"
 )
 
 // mockTransport implements [net/http.RoundTripper] and intercepts all requests

@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	"git.sr.ht/~cmcevoy/srchd/search"
+	"srchdsh/search"
 )
 
 func TestBlacklistAddDomain(t *testing.T) {

@@ -1,4 +1,4 @@
-// git.sr.ht/~cmcevoy/srchd/internal/engtest/tool is a very rudimentary tool to
+// srchdsh/internal/engtest/tool is a very rudimentary tool to
 // extract requests and responses to search engines from their test files.
 package main
 
@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"os"
 
-	"git.sr.ht/~cmcevoy/srchd/internal/engtest"
+	"srchdsh/internal/engtest"
 )
 
 var (

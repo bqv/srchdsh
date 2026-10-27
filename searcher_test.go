@@ -3,7 +3,7 @@ package main
 import (
 	"testing"
 
-	"git.sr.ht/~cmcevoy/srchd/search"
+	"srchdsh/search"
 )
 
 func TestMergeResults(t *testing.T) {

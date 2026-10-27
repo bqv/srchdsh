@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	"git.sr.ht/~cmcevoy/srchd/search"
+	"srchdsh/search"
 )
 
 // TestMojeekLive queries the real Mojeek, solving the Altcha challenge if one

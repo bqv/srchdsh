@@ -1,10 +1,12 @@
+//go:build live
+
 package engines
 
 import (
 	"testing"
 
-	"git.sr.ht/~cmcevoy/srchd/internal/engtest"
-	"git.sr.ht/~cmcevoy/srchd/search"
+	"srchdsh/internal/engtest"
+	"srchdsh/search"
 )
 
 func TestMediawikiSearch(t *testing.T) {

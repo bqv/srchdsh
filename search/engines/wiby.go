@@ -7,7 +7,7 @@ import (
 	"html"
 	"net/url"
 
-	"git.sr.ht/~cmcevoy/srchd/search"
+	"srchdsh/search"
 )
 
 // User agent to send requests with.

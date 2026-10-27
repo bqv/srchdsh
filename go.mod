@@ -1,4 +1,4 @@
-module git.sr.ht/~cmcevoy/srchd
+module srchdsh
 
 go 1.24.0
 
@@ -9,8 +9,8 @@ require (
 	github.com/andybalholm/brotli v1.2.0
 	github.com/klauspost/compress v1.18.0
 	github.com/quic-go/quic-go v0.54.0
-	gopkg.in/yaml.v3 v3.0.1
 	golang.org/x/crypto v0.42.0
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (

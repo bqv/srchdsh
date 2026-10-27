@@ -1,10 +1,10 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log"
-	"net/http"
 	"net/url"
 	"slices"
 	"sort"
@@ -13,7 +13,7 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"git.sr.ht/~cmcevoy/srchd/search"
+	"srchdsh/search"
 )
 
 const maxTitleLen = 100
@@ -22,19 +22,19 @@ const maxDescriptionLen = 300
 var engines = map[string]search.Engine{}
 var errAllFailed = errors.New("no engines performed a query successfully")
 
-// Determines the default set of requested engines from the request.
-//
-// If the user didn't configure any specific engines or if the cookie they gave
-// us is otherwise invalid, findWantedEngines returns [search.DefaultEngines].
-func findWantedEngines(r *http.Request) []string {
-	cookie, err := r.Cookie("engines")
-	if err != nil || strings.TrimSpace(cookie.Value) == "" {
-		// Pretend the cookie doesn't exist, just return
-		// DefaultEngines.
-		return search.DefaultEngines()
-	}
+// engineRun is the outcome of one engine's attempt at a query.
+type engineRun struct {
+	// ID is the engine's name, as used in the :engine operator.
+	ID string
 
-	return strings.Split(strings.TrimSpace(cookie.Value), ",")
+	// Duration is how long the attempt took.
+	Duration time.Duration
+
+	// Count is how many results the engine contributed, after blacklisting.
+	Count int
+
+	// Err is why the attempt failed, if it did.
+	Err error
 }
 
 // Handles the ':' search operator which specifies specific engines to search.
@@ -198,74 +198,108 @@ func processResults(res []search.Result) []search.Result {
 	return res
 }
 
-// Searches all requested engines.
-func doSearch(r *http.Request, requestQuery string, page int) ([]search.Result, map[string]error, error) {
-	wg := sync.WaitGroup{}
+// searchOutcome is everything a caller needs to build a document.
+type searchOutcome struct {
+	// Query is the query that was searched, with operators removed.
+	Query string
 
+	// Results are the merged and ranked results.
+	Results []search.Result
+
+	// Runs describes what every selected engine did.
+	Runs []engineRun
+
+	// Err is nil when at least one engine answered, [errAllFailed] when
+	// every selected engine failed, and some other error when the request
+	// itself was unusable.
+	Err error
+}
+
+// doSearch queries the requested engines and merges their results.
+//
+// Individual engine failures do not fail the search and are reported in the
+// returned runs instead; when every selected engine fails, Err is
+// [errAllFailed] and the runs explain why.
+func doSearch(ctx context.Context, requestQuery string, page int) searchOutcome {
 	wantEngines, query := processOperators(requestQuery)
+	query = strings.TrimSpace(query)
 
-	if len(query) == 0 {
-		// Empty queries are likely an error.
-		return nil, nil, fmt.Errorf("empty query")
+	out := searchOutcome{Query: query}
+	if query == "" {
+		out.Err = fmt.Errorf("empty query")
+		return out
 	}
 
-	var errors map[string]error
-	results := []search.Result{}
-	mu := sync.Mutex{}
+	var (
+		wg      sync.WaitGroup
+		mu      sync.Mutex
+		results = []search.Result{}
+		runs    = []engineRun{}
+	)
 
-	// Called as a goroutine for all requested engines in the loop below.
 	fn := func(name string, e search.Engine) {
 		defer wg.Done()
 
 		then := time.Now()
-		res, err := e.Search(r.Context(), query, page)
-		dur := time.Since(then)
-		recordEngineReqTime(name, dur)
+		res, err := e.Search(ctx, query, page)
+		run := engineRun{
+			ID:       name,
+			Duration: time.Since(then),
+		}
+
+		if err != nil {
+			run.Err = err
+			log.Printf("searching %q failed: %v", name, err)
+		} else {
+			res, _ = blacklist.Filter(res)
+			run.Count = len(res)
+		}
 
 		mu.Lock()
 		defer mu.Unlock()
 
-		if err != nil {
-			if errors == nil {
-				// Lazily initialize the map.
-				// In most cases, there will be no errors so
-				// there's no point in allocating it.
-				errors = map[string]error{}
-			}
-
-			incrementEngineErrorCount(name)
-			errors[name] = err
-			log.Printf("searching %q failed: %v", name, err)
-
-			return
-		}
-
-		// Apply the blacklist to the results and record the before &
-		// after count.
-		addEngineResultCount(name, len(res))
-		res, n := blacklist.Filter(res)
-		addEngineDroppedCount(name, n)
-
+		runs = append(runs, run)
 		results = append(results, res...)
 	}
 
+	selected := 0
 	for name, eng := range engines {
 		if len(wantEngines) > 0 && !slices.Contains(wantEngines, name) {
 			continue
 		}
 
+		selected++
 		wg.Add(1)
 		go fn(name, eng)
 	}
 
-	wg.Wait()
-
-	// Check to see if all engines failed.
-	if len(errors) == len(engines) {
-		// Everything did fail.
-		return nil, errors, errAllFailed
+	if selected == 0 {
+		if len(wantEngines) > 0 {
+			out.Err = fmt.Errorf("no known engine selected (asked for %s)", strings.Join(wantEngines, ", "))
+		} else {
+			out.Err = fmt.Errorf("no engines are enabled")
+		}
+		return out
 	}
 
-	// Process the results and return.
-	return processResults(results), errors, nil
+	wg.Wait()
+
+	// Sort the diagnostics so the JSON document is stable regardless of
+	// which engine answered first.
+	sort.Slice(runs, func(i, j int) bool { return runs[i].ID < runs[j].ID })
+
+	failed := 0
+	for _, run := range runs {
+		if run.Err != nil {
+			failed++
+		}
+	}
+
+	out.Results = processResults(results)
+	out.Runs = runs
+	if failed == selected {
+		out.Err = errAllFailed
+	}
+
+	return out
 }

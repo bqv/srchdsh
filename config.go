@@ -9,31 +9,17 @@ import (
 	"regexp"
 	"slices"
 	"sync"
-	"time"
 
-	"git.sr.ht/~cmcevoy/srchd/search"
 	"gopkg.in/yaml.v3"
+
+	"srchdsh/search"
 )
 
 // Top-level configuration structure.
 //
 // The fields of this struct are setup to be unmarshaled to by a YAML parser,
-// usually from a file in srchd's working directory named `config.yaml`.
+// usually from $XDG_CONFIG_HOME/srchdsh/config.yaml.
 type config struct {
-	// Specifies the address that the HTTP server listens on.
-	//
-	// By default, it is `:8080`, which means it will listen on all
-	// interfaces on port 8080.
-	Addr string
-
-	// The base URL is the address that the HTTP server is *served* on,
-	// i.e. what you point your web browser at.
-	// This can be different from `addr`, such as if you are listening on
-	// `localhost:8080` but access srchd through `example.com`.
-	//
-	// The default is `http://localhost:8080`.
-	BaseURL string `yaml:"base_url"`
-
 	// Specifies a list of rules to rewrite domain names in results.
 	//
 	// This will eventually provide more functionality, but works for my
@@ -59,39 +45,25 @@ type config struct {
 	// Specifies a list of file paths containing uBlacklist blocklists.
 	// All file paths are relative to the configuration file directory.
 	//
-	// Currently, srchd supports match patterns and Go syntax regular
+	// Currently, srchdsh supports match patterns and Go syntax regular
 	// expressions; this is enough to cover most use cases.
 	//
 	// This will be used to configure a blacklist that is used to filter
 	// out search results.
 	Blacklists []string
 
-	// Determines the interval to check the connection to certain engines.
-	// This uses Go's [time.Duration], so you can specify values like `5m`
-	// or `12h`.
-	//
-	// The default is `15m`.
-	PingInterval timeDuration `yaml:"ping_interval"`
-
 	// Specifies the default HTTP proxy.
 	// Overrides the HTTP_PROXY environment variable, but can be overridden
 	// by an engine's http_proxy setting.
 	//
-	// The special value "-" will cause srchd to behave as if HTTP_PROXY is
-	// not set.
+	// The special value "-" will cause srchdsh to behave as if HTTP_PROXY
+	// is not set.
 	//
 	// By default, this is blank and as such HTTP_PROXY will be used if it
 	// is set.
 	HttpProxy string `yaml:"http_proxy"`
 
-	// pprof specifies an address to serve pprof on.
-	// It cannot listen on the same port as Addr.
-	//
-	// There is a very good chance this means absolutely nothing to you; it
-	// can be safely ignored.
-	Pprof string
-
-	// Specifies configuration settings for engines supported by srchd.
+	// Specifies configuration settings for engines supported by srchdsh.
 	// The key of an engine specifies the name of the engine, and the value
 	// is the configuration of that engine.
 	//
@@ -102,23 +74,13 @@ type config struct {
 
 	// A list of engine names that should be explicitly disabled.
 	//
-	// Engines listed here will never be used at any point by srchd, even
+	// Engines listed here will never be used at any point by srchdsh, even
 	// if requested by a client.
 	Disabled []string `yaml:"disabled"`
 }
 
-// timeDuration is a wrapper on time.Duration which allows the decoding of
-// time.Duration values.
-type timeDuration struct {
-	time.Duration
-}
-
 // Default configuration.
 var defaultConfig = config{
-	Addr:         ":8080",
-	BaseURL:      "http://localhost:8080",
-	PingInterval: timeDuration{time.Minute * 15},
-
 	Engines: map[string]search.Config{},
 }
 
@@ -227,19 +189,6 @@ func rewriteUrl(in string) string {
 	}
 
 	return in
-}
-
-func (t *timeDuration) UnmarshalYAML(data *yaml.Node) error {
-	// This looks extremely weird, and I agree, but the point is that the
-	// line below checks to see if data is a string or not.
-	// I have taken the time to comprehend the docs just enough to say this.
-	if data.Kind != yaml.ScalarNode || data.Tag != "!!str" {
-		return fmt.Errorf("expected string, got %v", data.Tag)
-	}
-
-	var err error
-	t.Duration, err = time.ParseDuration(data.Value)
-	return err
 }
 
 // Attempts to initialize an engine.

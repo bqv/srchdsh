@@ -19,8 +19,8 @@ import (
 
 	"github.com/PuerkitoBio/goquery"
 
-	"git.sr.ht/~cmcevoy/srchd/internal/cache"
-	"git.sr.ht/~cmcevoy/srchd/search"
+	"srchdsh/internal/cache"
+	"srchdsh/search"
 )
 
 // Startpage serves Google's index by proxy, behind an Anubis proof-of-work
@@ -216,7 +216,7 @@ func (s *startpage) search(ctx context.Context, query string, page int, sc strin
 	form.Set("lui", "english")
 	form.Set("segment", "startpage.udog")
 	if page > 0 {
-		// srchd counts pages from zero; Startpage counts from one.
+		// srchdsh counts pages from zero; Startpage counts from one.
 		form.Set("page", strconv.Itoa(page+1))
 	}
 

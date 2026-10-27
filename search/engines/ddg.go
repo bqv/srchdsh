@@ -8,7 +8,7 @@ import (
 	"strings"
 	"sync"
 
-	"git.sr.ht/~cmcevoy/srchd/search"
+	"srchdsh/search"
 )
 
 // User agent to send requests with.
@@ -179,7 +179,7 @@ func (d *ddg) Search(ctx context.Context, query string, page int) ([]search.Resu
 		e := elem.Eq(i)
 
 		link := e.Find("a.result__a")
-		desc := elem.Find("a.result__snippet")
+		desc := e.Find("a.result__snippet")
 
 		v.Link, _ = link.Attr("href")
 

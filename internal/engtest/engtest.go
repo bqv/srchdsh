@@ -30,7 +30,7 @@ import (
 	"testing"
 	"time"
 
-	"git.sr.ht/~cmcevoy/srchd/search"
+	"srchdsh/search"
 )
 
 // Tester is the contextual struct for testing engines.

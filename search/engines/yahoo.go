@@ -6,7 +6,7 @@ import (
 	"net/url"
 	"strings"
 
-	"git.sr.ht/~cmcevoy/srchd/search"
+	"srchdsh/search"
 )
 
 // User agent to send requests with.
@@ -96,7 +96,7 @@ func (b *yahoo) Search(ctx context.Context, query string, page int) ([]search.Re
 			v.Description = strings.TrimSpace(e.Find(".compText > p").Text())
 		} else {
 			// New style
-			v.Link, _ = elem.Find(`a[data-matarget="algo"]`).Attr("href")
+			v.Link, _ = e.Find(`a[data-matarget="algo"]`).Attr("href")
 			v.Link = search.CleanURL(decodeYahooHref(v.Link))
 			v.Title = e.Find("h3.title").Text()
 			v.Description = strings.TrimSpace(e.Find(".compText > p").Text())

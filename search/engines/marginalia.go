@@ -13,7 +13,7 @@ import (
 	"net/url"
 	"strings"
 
-	"git.sr.ht/~cmcevoy/srchd/search"
+	"srchdsh/search"
 )
 
 type marginalia struct {

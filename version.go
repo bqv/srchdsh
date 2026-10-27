@@ -9,11 +9,11 @@ import (
 // Bump these when making a new release.
 const (
 	majorVer = 0
-	minorVer = 3
-	patchVer = 1
+	minorVer = 1
+	patchVer = 0
 )
 
-// Version of srchd.
+// Version of srchdsh.
 var Version = "unknown"
 
 func init() {

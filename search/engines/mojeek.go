@@ -22,8 +22,8 @@ import (
 	"github.com/PuerkitoBio/goquery"
 	"golang.org/x/crypto/pbkdf2"
 
-	"git.sr.ht/~cmcevoy/srchd/internal/cache"
-	"git.sr.ht/~cmcevoy/srchd/search"
+	"srchdsh/internal/cache"
+	"srchdsh/search"
 )
 
 // Mojeek runs its own crawler, so its results are an independent index rather

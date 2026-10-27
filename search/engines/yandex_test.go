@@ -1,11 +1,13 @@
+//go:build live
+
 package engines
 
 import (
 	"os"
 	"testing"
 
-	"git.sr.ht/~cmcevoy/srchd/internal/engtest"
-	"git.sr.ht/~cmcevoy/srchd/search"
+	"srchdsh/internal/engtest"
+	"srchdsh/search"
 )
 
 func TestYandexSearch(t *testing.T) {

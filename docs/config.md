@@ -1,53 +1,28 @@
-# Configuring srchd
+# Configuring srchdsh
 
-srchd is configured using a file named `config.yaml` (or specified using the `-conf` flag) which is a typical YAML configuration file.
-In most cases, you are only going to use it to tweak the weights assigned to an engine.
+srchdsh reads its configuration from `$XDG_CONFIG_HOME/srchdsh/config.yaml`
+when that file exists, or from the path given with `-conf`. Both commands take
+the flag; without a configuration file the defaults apply.
 
-The sections in this page identify specific keys in the configuration file, and a sample configuration file is provided at `./docs/config.yaml.example`.
+In most cases, you are only going to use it to tweak the weights assigned to an
+engine or to add a blocklist.
 
-These sections are also manually updated, but an effort is made to keep them in sync with the code that works with them.
-Consult `./config.go` and `./search/config.go` for updated/new configuration values.
+The sections in this page identify specific keys in the configuration file, and
+a sample configuration file is provided at `./docs/config.yaml.example`.
 
-## `addr`
-
-`addr` specifies the address that the HTTP server listens on.
-By default, it is `:8080`, which means it will listen on all interfaces on port 8080.
-
-**Example**: `localhost:8081`
-
-## `base_url`
-
-The base URL is the address that the HTTP server is *served* on, i.e. what you point your web browser at.
-This can be different from `addr`, such as if you are listening on `localhost:8080` but access srchd through `example.com`.
-The default is `http://localhost:8080`.
-
-**Example**: `https://example.com`
-
-Note that if you don't care about OpenSearch descriptions being broken then you can safely ignore setting this value.
-
-## `ping_interval`
-
-Determines the interval to check the connection to certain engines.
-This uses Go's [`time.Duration` format](https://pkg.go.dev/time#ParseDuration), so you can specify values like `5m` or `12h`.
-The default is `15m`.
-
-**Example**: `12h` for 12 hours
+These sections are also manually updated, but an effort is made to keep them in
+sync with the code that works with them.
+Consult `./config.go` and `./search/config.go` for updated/new configuration
+values.
 
 ## `http_proxy`
 
 Specifies the default HTTP proxy.
 Overrides the `HTTP_PROXY` environment variable, but can be overridden by an engine's `http_proxy` setting.
 
-The special value "-" will cause srchd to behave as if the `HTTP_PROXY` environment variable is not set.
+The special value "-" will cause srchdsh to behave as if the `HTTP_PROXY` environment variable is not set.
 
 By default, this is blank and as such `HTTP_PROXY` will be used if it is set.
-
-## `pprof`
-
-`pprof` specifies an address to serve [pprof](https://github.com/google/pprof) on.
-There is a very good chance this means absolutely nothing to you; it can be safely ignored.
-
-**Example**: `localhost:6060`
 
 ## `rewrite`
 
@@ -89,7 +64,7 @@ This can be used to "block" specific domains.
 `blacklists` specifies a list of files containing [uBlacklist rulesets](https://iorate.github.io/ublacklist/docs/advanced-features#rules).
 File paths are relative to the file where your configuration is stored.
 
-**srchd does not fully implement rulesets.**
+**srchdsh does not fully implement rulesets.**
 Currently, it supports [match patterns](https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Match_patterns) and [Go syntax regular expressions](https://pkg.go.dev/regexp/syntax).
 This is likely enough for most use cases.
 
@@ -104,7 +79,7 @@ blacklists:
 
 ## `engines`
 
-`engines` specifies configuration settings for engines supported by srchd.
+`engines` specifies configuration settings for engines supported by srchdsh.
 The key of an engine specifies the name of the engine, and the value is the configuration of that engine.
 
 Engines that are listed here, are not enabled by default, and are not listed in `disabled` will be implicitly enabled by having a configuration.
@@ -133,19 +108,14 @@ engines:
         debug: true
 ```
 
-Possible values:
-
-- `bing`
-- `ddg` (DuckDuckGo)
-- `google`
-- `mediawiki`
-- `wiby`
-- `yahoo`
+Possible values are the engine names printed by `srchdsh engines`: `bing`,
+`brave`, `ddg`, `google`, `marginalia`, `mediawiki`, `mojeek`, `startpage`,
+`wiby`, `yahoo` and `yandex`.
 
 ### `user_agent`
 
 Specifies the user agent that is used when making requests to the engine.
-srchd tries to mock a Chrome browser and as such uses a Chrome user agent by default.
+srchdsh tries to mock a Chrome browser and as such uses a Chrome user agent by default.
 You should not change this value unless you have a reason to.
 
 ### `timeout`
@@ -182,7 +152,7 @@ For more information, refer to [section 8 of RFC 8446](https://datatracker.ietf.
 ### `http_proxy`
 
 Configures a HTTP proxy to send requests through instead of using the one set in the `HTTP_PROXY` environment variable, if any.
-The special value `"-"` explicitly asks to use no proxy at all, i.e. srchd will pretend both `http_proxy` (config) and `$HTTP_PROXY` (environment variable) are not set.
+The special value `"-"` explicitly asks to use no proxy at all, i.e. srchdsh will pretend both `http_proxy` (config) and `$HTTP_PROXY` (environment variable) are not set.
 
 ### `debug`
 
@@ -198,7 +168,7 @@ You should always leave this at false unless you are debugging an engine, becaus
 ## `disabled`
 
 `disabled` is a list of engine names that should be explicitly disabled.
-Engines listed here will never be used at any point by srchd, even if requested by a client.
+Engines listed here will never be used at any point by srchd, even if requested with the `:engine` operator.
 
 **Example**:
 

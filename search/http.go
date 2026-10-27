@@ -20,7 +20,7 @@ import (
 	"github.com/quic-go/quic-go/http3"
 	"github.com/klauspost/compress/zstd"
 
-	"git.sr.ht/~cmcevoy/srchd/internal/brotlihack"
+	"srchdsh/internal/brotlihack"
 )
 
 // HttpClient is a helpful wrapper around [net/http.Client] that does useful

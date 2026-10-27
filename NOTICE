@@ -1,0 +1,25 @@
+srchdsh
+=======
+
+srchdsh is a derivative work of srchd, a metasearch engine by cmcevoy.
+
+    Upstream:  https://git.sr.ht/~cmcevoy/srchd
+    Commit:    317dd45330c52cf139621bdcd8efe346245db535
+    Date:      2025-09-14 ("ddg: use html.duckduckgo.com")
+
+The search engine implementations, the fan-out and merge logic, the scoring,
+the configuration format and the blacklist implementation come from srchd and
+remain under its licence, the GNU Affero General Public License version 3. See
+LICENSE for the full text.
+
+Changes in this fork:
+
+  - the search path is decoupled from net/http, and the web interface
+    (templates, static files, settings, OpenSearch, stats) is removed;
+  - a command-line interface with a JSON document, and an optional HTTP mode
+    serving the same document;
+  - Startpage and Mojeek engines, with their challenge solvers and a small
+    persistent cache.
+
+Because srchdsh is a derivative of an AGPL-3.0 program, it is licensed under the
+AGPL-3.0 as a whole and cannot be relicensed.

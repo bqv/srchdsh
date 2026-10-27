@@ -1,3 +1,5 @@
+//go:build live
+
 package engines
 
 import (
@@ -5,7 +7,7 @@ import (
 	"os"
 	"testing"
 
-	"git.sr.ht/~cmcevoy/srchd/search"
+	"srchdsh/search"
 )
 
 func TestBingSearch(t *testing.T) {

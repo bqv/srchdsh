@@ -1,6 +1,10 @@
 /config.json
 /config.yaml
-/srchd
+/srchdsh
+
+# Local build caches, kept in the worktree so a sandboxed build works.
+/.gocache/
+/.gomodcache/
 
 # See commit 0f3e1cf67369e4d398b4de45297b9c2f2c330e33
 /search/engines/testdata

@@ -10,7 +10,7 @@ import (
 
 	"golang.org/x/crypto/pbkdf2"
 
-	"git.sr.ht/~cmcevoy/srchd/search"
+	"srchdsh/search"
 )
 
 // newAltchaChallenge builds a challenge whose answer is counter.

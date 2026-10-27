@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"git.sr.ht/~cmcevoy/srchd/search"
+	"srchdsh/search"
 )
 
 // TestStartpageLive queries the real Startpage, solving the Anubis challenge

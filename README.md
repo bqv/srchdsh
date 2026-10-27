@@ -1,48 +1,105 @@
-# srchd
+# srchdsh
 
-![srchd search results for "small web"](docs/showcase.jpg)
+A metasearch backend for [DSH](https://github.com/deepseek-ai/deepseek-harness),
+forked from [srchd](https://git.sr.ht/~cmcevoy/srchd) by cmcevoy.
 
-**10 second pitch**:
-srchd is a privacy-respecting metasearch engine written in Go.
-Search several search engines at once without switching tabs, and reap the benefits of (occasionally) better results.
+It queries several engines at once, merges and ranks their results, and emits
+one JSON document. `srchdsh search` is a one-shot command, so DSH's web seam can
+run it per query with no daemon; `srchdsh serve` exposes the same document over
+HTTP for a second consumer.
 
-**Note**: The canonical repository is located at <https://git.sr.ht/~cmcevoy/srchd>.
-[A mirror exists on GitHub](https://github.com/mca3/srchd).
+srchdsh is not a search engine for people. The web interface, templates, static
+files and settings pages of the original are gone; the only contract is the
+document described below.
 
-## Rationale
+## Build
 
-Search engines of today are a far cry from what they used to be.
-I find it hard at times to find exactly what I am looking for, and often I would jump across two or three different search engines to find what I am looking for.
-This is no fun.
+```sh
+go build -o srchdsh .
+```
 
-Naturally, I became a user of [SearxNG](https://github.com/searxng/searxng) for a period of time, however I found it hard to run on my memory constrained servers and configuration is complicated.
-Though, I can vouch for its usefulness, it's a great piece of software.
+## Use
 
-I set out to replace SearxNG with something a bit lighter (and to satisfy my [NIH syndrome](https://en.wikipedia.org/wiki/Not_invented_here)) and srchd is the result.
-I started using it as my primary search engine about two weeks after I started working on it and haven't looked back.
+```sh
+# One JSON document on stdout; diagnostics on stderr.
+srchdsh search -q 'deepseek harness' | jq
 
-## Running
+# Human-readable when stdout is a terminal; -json/-table override.
+srchdsh search -q 'deepseek harness' -max 5
 
-**Get up and going in under 30 seconds** (provided your machine is moderately fast):
-Ensure you have [Go](https://go.dev) installed and run `go run git.sr.ht/~cmcevoy/srchd@latest`.
+# Restrict the engines (the colon operator, as in srchd).
+srchdsh search -q ':ddg deepseek harness'
 
-From this repository, you can use the usual Go commands to build and run binaries.
-Simply use `go build .` to build a binary that holds all of the resources it needs to run within itself, or `go run .` to run the code right out of this repository.
+# Optional HTTP mode, same document.
+srchdsh serve -addr 127.0.0.1:8089
+curl -s localhost:8089/v1/search -d '{"query":"deepseek harness","maxResults":5}'
 
-An example configuration file can be found at `./docs/config.yaml.example` and documentation at `./docs/config.md`.
+srchdsh engines          # enabled engines, from the current configuration
+srchdsh version
+```
 
-## Search engine support
+### The document
 
-srchd is a young project and as such doesn't have a lot of support.
+```json
+{
+  "query": "deepseek harness",
+  "tookMs": 612,
+  "truncated": false,
+  "sources": [
+    {
+      "url": "https://www.deepseek.com/en/harness/",
+      "title": "DeepSeek Harness | Explore the limits of intelligence",
+      "snippet": "Use DeepSeek Harness to work with documents, analyze spreadsheets, …"
+    }
+  ],
+  "engines": [
+    { "id": "ddg", "ms": 431, "count": 10 },
+    { "id": "startpage", "ms": 502, "count": 0, "error": "captcha" }
+  ]
+}
+```
 
-- Bing (likely broken, disabled by default)
-- Brave
-- DuckDuckGo
-- Google
-- [Marginalia Search](https://marginalia-search.com) (**not** through API)
-- Mediawiki (e.g. Wikipedia, requires configuration)
-- Mojeek (its own index; solves the Altcha challenge, first page only)
-- Startpage (Google's index, behind a proof-of-work challenge)
-- Yahoo
-- Yandex (experimental, off by default)
-- wiby.me (native API)
+- `sources` is already deduplicated and ranked, and capped to `-max`
+  (`maxResults` over HTTP); `truncated` records that something was dropped.
+- `publishedAt` only appears when an engine supplies a date; no engine invents
+  one.
+- `engines` reports every selected engine, including failures, so a slow or
+  broken engine is visible in the same call. Errors are short machine strings:
+  `captcha`, `timeout`, `http 429`, `error`.
+
+### Exit codes
+
+| code | meaning |
+|---|---|
+| 0 | at least one source |
+| 1 | no sources, but nothing failed outright |
+| 2 | failure: bad usage, no engines enabled, or every engine failed |
+
+## Configuration
+
+YAML, read from `$XDG_CONFIG_HOME/srchdsh/config.yaml` when it exists, or from
+`-conf PATH`. Without either, defaults apply: engine defaults, no blocklists,
+no rewrites.
+
+An example is at [`docs/config.yaml.example`](docs/config.yaml.example), and the
+fields are documented in [`docs/config.md`](docs/config.md).
+
+## Engines
+
+| engine | notes |
+|---|---|
+| DuckDuckGo | works |
+| Startpage | Google's index; solves its Anubis proof of work, then caches the cookie for five minutes |
+| Mojeek | its own index; solves the Altcha challenge, first page only, and `robots.txt` disallows `/search` |
+| Bing | works, but Bing is rarely the best index |
+| Brave | upstream parser returns nothing; SearXNG's works, not ported |
+| Google | dead: consent wall, then JavaScript challenges |
+| Marginalia, Wiby, Yahoo, Yandex | upstream engines, unchanged |
+| Mediawiki | requires configuration |
+
+`srchdsh engines` prints the enabled set.
+
+## Licence and provenance
+
+AGPL-3.0. This is a derivative work of srchd; see [`LICENSE`](LICENSE) and
+[`NOTICE`](NOTICE) for the upstream commit. It cannot be relicensed.

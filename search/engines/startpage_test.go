@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"git.sr.ht/~cmcevoy/srchd/search"
+	"srchdsh/search"
 )
 
 func TestSolveAnubis(t *testing.T) {

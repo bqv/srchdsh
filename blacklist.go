@@ -7,7 +7,7 @@ import (
 	"regexp"
 	"strings"
 
-	"git.sr.ht/~cmcevoy/srchd/search"
+	"srchdsh/search"
 )
 
 // Implements a basic blacklist.

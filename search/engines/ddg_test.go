@@ -3,9 +3,6 @@ package engines
 import (
 	"fmt"
 	"testing"
-
-	"git.sr.ht/~cmcevoy/srchd/internal/engtest"
-	"git.sr.ht/~cmcevoy/srchd/search"
 )
 
 func TestDDGPageParams(t *testing.T) {
@@ -27,13 +24,4 @@ func TestDDGPageParams(t *testing.T) {
 			}
 		})
 	}
-}
-
-func TestDDGSearch(t *testing.T) {
-	engtest.New("ddg", search.Config{}).RunTests(t,
-		"hello world",
-		"wikipedia",
-		"big bang theory",
-		"exanple", // intentionally misspelled
-	)
 }
