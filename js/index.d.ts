@@ -34,7 +34,7 @@ export interface SearchOptions {
   conf?: string;
   /** Binary to run; defaults to $SRCHDSH_BIN, then `srchdsh` on PATH. */
   bin?: string;
-  /** Overall search timeout; the child is killed and the promise rejects. */
+  /** Overall search timeout; the child is killed at this plus 2 s and the promise rejects. */
   timeoutMs?: number;
   /** Cancelling this kills the child process. */
   signal?: AbortSignal;

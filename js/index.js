@@ -128,6 +128,15 @@ export function search(query, options = {}) {
     args.push('--timeout', `${Math.max(1, Math.ceil(options.timeoutMs / 1000))}s`);
   }
 
+  // The CLI enforces --timeout around the search itself, but a starved
+  // machine can spend longer than that paging the binary and its TLS stacks
+  // in. Bound the whole child as well, so the caller gets a provider error
+  // well inside the tool budget instead of waiting for the tool's own timeout.
+  const deadline = options.timeoutMs
+    ? AbortSignal.timeout(options.timeoutMs + 2000)
+    : undefined;
+  const signal = combineSignals(options.signal, deadline);
+
   return new Promise((resolve, reject) => {
     let stdout = '';
     let stderr = '';
@@ -137,7 +146,7 @@ export function search(query, options = {}) {
     try {
       child = spawn(bin, args, {
         stdio: ['ignore', 'pipe', 'pipe'],
-        signal: options.signal,
+        signal,
       });
     } catch (err) {
       reject(new SrchdshError(`cannot start ${bin}: ${err.message}`));
@@ -169,10 +178,12 @@ export function search(query, options = {}) {
 
     child.on('error', (err) => {
       // A missing binary and an aborted spawn both arrive here.
-      const message =
-        err.name === 'AbortError'
-          ? 'search aborted'
-          : `cannot run ${bin}: ${err.message}`;
+      let message = `cannot run ${bin}: ${err.message}`;
+      if (err.name === 'AbortError') {
+        message = deadline?.aborted
+          ? `search timed out after ${options.timeoutMs} ms`
+          : 'search aborted';
+      }
       fail(new SrchdshError(message, { stderr }));
     });
 
@@ -219,6 +230,18 @@ export function search(query, options = {}) {
       resolve(document);
     });
   });
+}
+
+// combineSignals merges abort signals, tolerating absent ones.
+function combineSignals(...signals) {
+  const active = signals.filter(Boolean);
+  if (active.length === 0) {
+    return undefined;
+  }
+  if (active.length === 1) {
+    return active[0];
+  }
+  return AbortSignal.any(active);
 }
 
 function parseDocument(stdout) {

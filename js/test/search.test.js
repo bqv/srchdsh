@@ -113,3 +113,12 @@ test('binPath prefers the option, then the environment', () => {
     }
   }
 });
+
+test('kills the child at the deadline, not the tool budget', async () => {
+  const started = Date.now();
+
+  await assert.rejects(search('hang-me', { bin: stub, timeoutMs: 100 }), /timed out/);
+
+  // 100 ms plus the 2 s grace, with room for test scheduling.
+  assert.ok(Date.now() - started < 5000, 'deadline was not enforced');
+});
