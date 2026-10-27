@@ -125,7 +125,7 @@ fields are documented in [`docs/config.md`](docs/config.md).
 
 ### Deliberately absent
 
-Each of these was measured against this tree, not assumed; the numbers are from
+Each of these was tested against this tree; the request results are from
 2026-10-24.
 
 - **Qwant** — `api.qwant.com` answers `403 {"error_code":50}` even with the
@@ -140,9 +140,19 @@ Each of these was measured against this tree, not assumed; the numbers are from
 - **Google CSE** — the keyless CSE trick SearXNG uses needs a shared
   third-party CSE id and its communal quota; Startpage serves the same index
   without either.
+- **Baidu** — redirects to its `wappass.baidu.com` image captcha ("百度安全验证")
+  from an EU address, on both the desktop and mobile endpoints, for English and
+  Chinese queries alike. Its result links are also redirect-wrapped
+  (`/link?url=…`), so every citation would cost another request. Its index is
+  Chinese-first: expect Chinese-language pages even for an English query.
+- **Sogou / 360** — Sogou answers `399` with an anti-bot body; 360 (so.com)
+  served one result page and then redirect-looped. Both are Chinese-index
+  engines with the same English-query caveat.
 
 Qwant or Ecosia become worth revisiting only if they expose a sanctioned API,
-and MetaGer only if the key is bought.
+MetaGer only if the key is bought, and Baidu only through its paid search API.
+Chinese queries do not need them: DuckDuckGo, Startpage and Yahoo already return
+Chinese-language sources (百度百科, 中文维基) for them.
 
 ## Licence and provenance
 
