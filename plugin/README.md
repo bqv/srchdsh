@@ -11,9 +11,22 @@ document.
 
 The provider needs the `srchdsh` Node package (`../js`) and the Go binary.
 
+Mount it by relative path, the way `plugins/dsh-fork-title` is mounted: there is
+then no pnpm entry for a later `dsh plugin install` to prune, and the profile's
+`package.json` stays untouched.
+
 ```sh
-dsh plugin --profile web add /path/to/srchdsh/plugin
+profile=$DSH_HOME/profiles/web
+mkdir -p "$profile/plugins/dsh-search-srchdsh" "$profile/plugins/node_modules/srchdsh"
+cp plugin/index.js plugin/package.json "$profile/plugins/dsh-search-srchdsh/"
+cp js/index.js js/index.d.ts js/package.json "$profile/plugins/node_modules/srchdsh/"
+
+install -m 0755 /path/to/srchdsh "$HOME/bin/srchdsh"
 ```
+
+`plugins/node_modules/srchdsh` is what makes the provider's bare `srchdsh`
+import resolve from inside `plugins/dsh-search-srchdsh/`; Node walks up from
+the importing file.
 
 Then register it and pin it in `$DSH_HOME/profiles/web/cordis.patch.yml`:
 

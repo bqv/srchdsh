@@ -7,8 +7,9 @@
  * binary.
  *
  * Register it and pin `searchProvider: srchdsh` in the deployment; with the
- * id pinned, a missing binary fails the call as WEB_PROVIDER_CONFIGURED_
- * UNAVAILABLE instead of silently falling back to another provider.
+ * id pinned, a missing binary fails the call as
+ * WEB_PROVIDER_CONFIGURED_UNAVAILABLE instead of silently falling back to
+ * another provider.
  */
 
 import { available, search } from 'srchdsh';
